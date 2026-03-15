@@ -8,8 +8,7 @@ enum class NodeType{
     OUTPUT
 };
 
-class NodeGene{
-public:
+struct NodeGene{
     int nodeID;
     NodeType nodeType;
     float layerX;

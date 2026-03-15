@@ -6,8 +6,8 @@
 
 class InnovationManager{
 private:
-    int currentInnovationID_;
-    int currentNodeID_;
+    int currentInnovationID_ = 0;
+    int currentNodeID_ = TOTAL_NODES;
     std::map<std::pair<int, int>, int> history_;
 
 public:

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NodeGene.hpp"
 #include <map>
 #include <utility>
 

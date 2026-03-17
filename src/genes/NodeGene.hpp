@@ -19,6 +19,6 @@ struct NodeGene{
     bool operator==(const NodeGene& other) const { return this->nodeID == other.nodeID; }
 };
 
-const int INPUT_NODES = 9;
+const int INPUT_NODES = 14;
 const int OUTPUT_NODES = 8;
 const int TOTAL_NODES = INPUT_NODES + OUTPUT_NODES + 1;

@@ -18,7 +18,7 @@ private:
     bool isAlive_;
     float fitness_;
 
-    void buildBody(Vector2 startPosition);
+    void buildBody(const Vector2& startPosition);
 public:
     Spider(const Genome& genome, const Vector2& position, b2WorldId worldId);
     void update();

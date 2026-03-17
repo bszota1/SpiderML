@@ -3,6 +3,7 @@
 
 Population::Population(int size) : populationSize_{size} , generation_{0} {
     std::uniform_real_distribution<float> dist(-1.0f,1.0f);
+    std::uniform_real_distribution<float> distProb(0.0f, 1.0f);
     
     std::vector<NodeGene> nodes;
     nodes.reserve(TOTAL_NODES);
@@ -14,23 +15,39 @@ Population::Population(int size) : populationSize_{size} , generation_{0} {
         nodes.emplace_back(NodeGene(i, NodeType::OUTPUT, 1));
     }
 
-    int totalConnections = (INPUT_NODES + 1) * OUTPUT_NODES;
-    std::vector<ConnectionGene> connecitons;
-    connecitons.reserve(totalConnections);
-    for(int i{}; i < INPUT_NODES + 1; i++){
-        for(int j{}; j < OUTPUT_NODES; j++){
-            int inID = i;
-            int outID = j + INPUT_NODES + 1;
-            connecitons.emplace_back(ConnectionGene(inID, outID, dist(rng_), true, innovManager_.getInnovationID(inID,outID)));
-        }
-    }
-
     population_.reserve(populationSize_);
     for (int i{}; i < populationSize_; i++){
-        std::vector<ConnectionGene> genomeConnections = connecitons;
-        for (auto& connection : genomeConnections) {
-            connection.weight = dist(rng_);
+        std::vector<ConnectionGene> genomeConnections;
+
+        for (int out = 0; out < OUTPUT_NODES; out++) {
+            int forcedIn = std::uniform_int_distribution<int>(0, INPUT_NODES)(rng_);
+            int inID = forcedIn;
+            int outID = out + INPUT_NODES + 1;
+            genomeConnections.emplace_back(ConnectionGene(inID, outID, dist(rng_), true, innovManager_.getInnovationID(inID, outID)));
         }
+
+        for(int in = 0; in < INPUT_NODES + 1; in++){
+            for(int out = 0; out < OUTPUT_NODES; out++){
+                int inID = in;
+                int outID = out + INPUT_NODES + 1;
+
+                bool exists = false;
+                for (const auto& connection : genomeConnections) {
+                    if (connection.inNodeID == inID && connection.outNodeID == outID) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    continue;
+                }
+
+                if (distProb(rng_) < NeatConfig::kInitialConnectionProbability) {
+                    genomeConnections.emplace_back(ConnectionGene(inID, outID, dist(rng_), true, innovManager_.getInnovationID(inID, outID)));
+                }
+            }
+        }
+
         population_.emplace_back(Genome(i, nodes, genomeConnections));
     }
 

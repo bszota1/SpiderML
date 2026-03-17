@@ -25,13 +25,15 @@ private:
     std::vector<Species> species_;
     InnovationManager innovManager_;
     std::mt19937 rng_;
-    static constexpr float COMPATIBILITY_THRESHOLD = 3.0f;
 public:
     Population(int size);
     void speciate();
     void calculateFitness();
     void nextGeneration();
 
+    std::vector<Genome>& getPopulationMutable() { return population_; }
     const std::vector<Genome>& getPopulation() const { return population_; }
+    int getGeneration() const { return generation_; }
+    int getSpeciesCount() const;
 
 };

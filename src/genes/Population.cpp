@@ -1,4 +1,5 @@
 #include "Population.hpp"
+#include "../evolution/NeatConfig.hpp"
 
 Population::Population(int size) : populationSize_{size} , generation_{0} {
     std::uniform_real_distribution<float> dist(-1.0f,1.0f);
@@ -26,12 +27,24 @@ Population::Population(int size) : populationSize_{size} , generation_{0} {
 
     population_.reserve(populationSize_);
     for (int i{}; i < populationSize_; i++){
-        population_.emplace_back(Genome(i, nodes, connecitons));
+        std::vector<ConnectionGene> genomeConnections = connecitons;
+        for (auto& connection : genomeConnections) {
+            connection.weight = dist(rng_);
+        }
+        population_.emplace_back(Genome(i, nodes, genomeConnections));
     }
 
 }
 
 void Population::speciate(){
+    species_.erase(std::remove_if(species_.begin(), species_.end(), [](const Species& species) {
+        return species.members.empty();
+    }), species_.end());
+
+    for (size_t i = 0; i < species_.size(); ++i) {
+        species_[i].speciesID = static_cast<int>(i);
+    }
+
     for (auto& species : species_){
         species.members.clear();
     }
@@ -40,8 +53,13 @@ void Population::speciate(){
         Genome& currentSpider = population_[i];
         bool foundSpecies = false;
         for (auto& species : species_){
-            float currentDist = currentSpider.getCompabilityDistance(species.representative, 1.0f, 1.0f, 0.4f);
-            if (currentDist < COMPATIBILITY_THRESHOLD){
+            float currentDist = currentSpider.getCompabilityDistance(
+                species.representative,
+                NeatConfig::kCompatibilityC1,
+                NeatConfig::kCompatibilityC2,
+                NeatConfig::kCompatibilityC3
+            );
+            if (currentDist < NeatConfig::kCompatibilityThreshold){
                 currentSpider.speciesID_ = species.speciesID;
                 species.members.push_back(&currentSpider);
                 foundSpecies = true;
@@ -55,6 +73,12 @@ void Population::speciate(){
                 currentSpider.speciesID_ = newSpecies.speciesID;
                 species_.push_back(newSpecies);
             }
+    }
+
+    for (auto& species : species_) {
+        if (!species.members.empty()) {
+            species.representative = *species.members.front();
+        }
     }
 }
 
@@ -74,7 +98,8 @@ void Population::nextGeneration() {
     nextGen.reserve(populationSize_);
 
     float globalAdjustedFitness = 0.0f;
-    Genome* absoluteBest = nullptr;
+    std::vector<Genome*> allCandidates;
+    allCandidates.reserve(population_.size());
 
     for (auto& species : species_) {
         if (species.members.empty()) continue;
@@ -83,9 +108,7 @@ void Population::nextGeneration() {
             return a->fitness_ > b->fitness_;
         });
 
-        if (absoluteBest == nullptr || species.members[0]->fitness_ > absoluteBest->fitness_) {
-            absoluteBest = species.members[0];
-        }
+        allCandidates.insert(allCandidates.end(), species.members.begin(), species.members.end());
 
         int survivalCount = std::max(1, (int)species.members.size() / 2);
         species.members.resize(survivalCount);
@@ -95,11 +118,15 @@ void Population::nextGeneration() {
         }
     }
 
-    
-    if (absoluteBest != nullptr) {
-        Genome champion = *absoluteBest;
-        champion.genomeID_ = nextGen.size();
-        nextGen.push_back(champion);
+    std::sort(allCandidates.begin(), allCandidates.end(), [](const Genome* a, const Genome* b) {
+        return a->fitness_ > b->fitness_;
+    });
+
+    const int eliteCount = std::min({NeatConfig::kElitismCount, populationSize_, static_cast<int>(allCandidates.size())});
+    for (int i = 0; i < eliteCount; i++) {
+        Genome elite = *allCandidates[i];
+        elite.genomeID_ = nextGen.size();
+        nextGen.push_back(elite);
     }
 
     std::uniform_real_distribution<float> distProb(0.0f, 1.0f);
@@ -131,16 +158,16 @@ void Population::nextGeneration() {
 
             Genome child = Genome::crossover(nextGen.size(), *parent1, *parent2, rng_);
 
-            if (distProb(rng_) < 0.80f) child.mutateWeights(rng_);
-            if (distProb(rng_) < 0.05f) child.mutateAddConnection(rng_, innovManager_);            
-            if (distProb(rng_) < 0.01f) child.mutateAddNode(rng_, innovManager_);
+            if (distProb(rng_) < NeatConfig::kGenomeMutateWeightsChance) child.mutateWeights(rng_);
+            if (distProb(rng_) < NeatConfig::kAddConnectionChance) child.mutateAddConnection(rng_, innovManager_);
+            if (distProb(rng_) < NeatConfig::kAddNodeChance) child.mutateAddNode(rng_, innovManager_);
 
             nextGen.push_back(child);
         }
     }
 
-    while (nextGen.size() < populationSize_) {
-        Genome backupChild = *absoluteBest;
+    while (nextGen.size() < populationSize_ && !allCandidates.empty()) {
+        Genome backupChild = *allCandidates.front();
         backupChild.genomeID_ = nextGen.size();
         backupChild.mutateWeights(rng_);
         nextGen.push_back(backupChild);
@@ -148,4 +175,14 @@ void Population::nextGeneration() {
 
     population_ = std::move(nextGen);
     generation_++;
+}
+
+int Population::getSpeciesCount() const {
+    int count = 0;
+    for (const auto& species : species_) {
+        if (!species.members.empty()) {
+            count++;
+        }
+    }
+    return count;
 }

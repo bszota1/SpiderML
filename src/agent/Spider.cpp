@@ -16,7 +16,9 @@ void Spider::kill(){
 
 void Spider::buildBody(const Vector2& position) {
     b2Filter spiderFilter = b2DefaultFilter();
-    spiderFilter.groupIndex = -genome_.genomeID_;
+    
+    spiderFilter.categoryBits = 0x0002; 
+    spiderFilter.maskBits = 0x0001;
 
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
@@ -146,7 +148,8 @@ void Spider::update() {
 
    
     for (size_t i = 0; i < joints_.size(); i++) {
-        float desiredSpeed = (outputs[i] * 30.0f) - 15.0f; 
+        float outputValue = (i < outputs.size()) ? outputs[i] : 0.0f;
+        float desiredSpeed = (outputValue * 30.0f) - 15.0f;
         b2RevoluteJoint_SetMotorSpeed(joints_[i], desiredSpeed);
     }
     b2Vec2 pos = b2Body_GetPosition(torso_);

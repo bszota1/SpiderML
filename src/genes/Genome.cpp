@@ -1,4 +1,5 @@
 #include "Genome.hpp"
+#include "../evolution/NeatConfig.hpp"
 
 Genome::Genome(int id) :
     genomeID_{id},
@@ -16,20 +17,20 @@ Genome::Genome(int id, const std::vector<NodeGene> genes, const std::vector<Conn
 
 void Genome::mutateWeights(std::mt19937& rng){
     std::uniform_real_distribution<float> distProb(0.0f, 1.0f);
-    std::uniform_real_distribution<float> smlChng(-0.5f, 0.5f);
-    std::uniform_real_distribution<float> bigChng(-2.0f, 2.0f);
+    std::uniform_real_distribution<float> smlChng(NeatConfig::kWeightMutateSmallDeltaMin, NeatConfig::kWeightMutateSmallDeltaMax);
+    std::uniform_real_distribution<float> bigChng(NeatConfig::kWeightMutateResetMin, NeatConfig::kWeightMutateResetMax);
 
     for (ConnectionGene& connection : connections_) {
-        if (distProb(rng) < 0.8f) { 
-            if (distProb(rng) < 0.9f) { 
+        if (distProb(rng) < NeatConfig::kWeightMutateConnectionChance) {
+            if (distProb(rng) < NeatConfig::kWeightMutatePerturbChance) {
                 connection.weight += smlChng(rng);
             } 
             else { 
                 connection.weight = bigChng(rng);
             }
 
-        if (connection.weight > 8.0f) connection.weight = 8.0f;
-        if (connection.weight < -8.0f) connection.weight = -8.0f;
+        if (connection.weight > NeatConfig::kMaxAbsWeight) connection.weight = NeatConfig::kMaxAbsWeight;
+        if (connection.weight < -NeatConfig::kMaxAbsWeight) connection.weight = -NeatConfig::kMaxAbsWeight;
         }
     }
 }

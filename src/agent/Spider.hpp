@@ -21,6 +21,7 @@ private:
     void buildBody(const Vector2& startPosition);
 public:
     Spider(const Genome& genome, const Vector2& position, b2WorldId worldId);
+    ~Spider();
     void update();
     void draw() const;
 

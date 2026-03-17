@@ -73,7 +73,7 @@ void Spider::buildBody(const Vector2& position) {
             hipDef.localAnchorB = {-side * 10.0f, 0.0f};
             
             hipDef.enableMotor = true;
-            hipDef.maxMotorTorque = 500000.0f;;
+            hipDef.maxMotorTorque = 500000.0f;
             hipDef.motorSpeed = (i % 2 == 0) ? 3.0f : -3.0f;
             
             joints_.push_back(b2CreateRevoluteJoint(worldId_, &hipDef));

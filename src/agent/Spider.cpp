@@ -121,12 +121,26 @@ void Spider::update() {
 
     
     b2Rot torsoRot = b2Body_GetRotation(torso_);
+    b2Vec2 velocity = b2Body_GetLinearVelocity(torso_);
+    inputs.push_back(velocity.x * 0.1f);
+    inputs.push_back(velocity.y * 0.1f);
     inputs.push_back(b2Rot_GetAngle(torsoRot));
 
     
     for (b2JointId joint : joints_) {
         inputs.push_back(b2RevoluteJoint_GetAngle(joint));
     }
+
+    double time = GetTime();
+    double stime = sinf(time * 5.0f);
+    double ctime = cosf(time * 5.0f);
+
+    inputs.push_back(stime);
+    inputs.push_back(ctime);
+
+    b2Vec2 position = b2Body_GetPosition(torso_);
+    float height = (550.0f - position.y) * 0.01f;
+    inputs.push_back(height);
 
     std::vector<float> outputs = neuralNetwork_.feedForward(inputs);
 
@@ -137,4 +151,17 @@ void Spider::update() {
     }
     b2Vec2 pos = b2Body_GetPosition(torso_);
     fitness_ = pos.x; 
+}
+
+
+Spider::~Spider(){
+    if (b2Body_IsValid(torso_)) {
+        b2DestroyBody(torso_);
+    }
+
+    for (b2BodyId leg : legs_) {
+        if (b2Body_IsValid(leg)) {
+            b2DestroyBody(leg);
+        }
+    }
 }

@@ -101,8 +101,3 @@ Most frequently tuned:
 4. Evaluate trends in build/training_stats.csv.
 5. Adjust parameters and repeat.
 
-## Further Ideas
-
-- Add a headless mode for faster training (no rendering).
-- Export the best genome and support replay.
-- Add dynamic compatibility-threshold tuning to target a desired species count.

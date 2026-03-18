@@ -183,8 +183,11 @@ void Population::nextGeneration() {
         }
     }
 
+    const int backupPoolSize = std::min<int>(std::max<int>(1, static_cast<int>(allCandidates.size()) / 10), static_cast<int>(allCandidates.size()));
+    std::uniform_int_distribution<int> backupDist(0, backupPoolSize - 1);
+
     while (nextGen.size() < populationSize_ && !allCandidates.empty()) {
-        Genome backupChild = *allCandidates.front();
+        Genome backupChild = *allCandidates[backupDist(rng_)];
         backupChild.genomeID_ = nextGen.size();
         backupChild.mutateWeights(rng_);
         nextGen.push_back(backupChild);

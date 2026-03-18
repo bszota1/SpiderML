@@ -22,10 +22,10 @@ constexpr float kWeightMutateResetMax = 2.0f;
 constexpr float kMaxAbsWeight = 8.0f;
 
 constexpr float kGenomeMutateWeightsChance = 0.25f;
-constexpr float kAddConnectionChance = 0.08f;
-constexpr float kAddNodeChance = 0.03f;
+constexpr float kAddConnectionChance = 0.10f;
+constexpr float kAddNodeChance = 0.04f;
 constexpr float kInitialConnectionProbability = 0.25f;
 
 constexpr int kRollingWindowGenerations = 10;
-constexpr int kElitismCount = 2;
+constexpr int kElitismCount = 1;
 }

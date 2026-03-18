@@ -25,6 +25,7 @@ private:
     float bestFitness_;
     float avgFitness_;
     float medianFitness_;
+    float stdDevFitness_;
     int speciesCount_;
     float rollingBestFitness_;
     float rollingAvgFitness_;
@@ -50,6 +51,7 @@ public:
     float getBestFitness() const { return bestFitness_; }
     float getAvgFitness() const { return avgFitness_; }
     float getMedianFitness() const { return medianFitness_; }
+    float getStdDevFitness() const { return stdDevFitness_; }
     int getSpeciesCount() const { return speciesCount_; }
     float getRollingBestFitness() const { return rollingBestFitness_; }
     float getRollingAvgFitness() const { return rollingAvgFitness_; }

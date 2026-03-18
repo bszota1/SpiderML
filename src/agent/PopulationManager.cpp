@@ -2,6 +2,7 @@
 #include "../evolution/NeatConfig.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <string>
 
@@ -16,6 +17,7 @@ PopulationManager::PopulationManager(int populSize, b2WorldId worldID) :
         bestFitness_ = 0.0f;
         avgFitness_ = 0.0f;
         medianFitness_ = 0.0f;
+        stdDevFitness_ = 0.0f;
         speciesCount_ = 0;
         rollingBestFitness_ = 0.0f;
         rollingAvgFitness_ = 0.0f;
@@ -35,7 +37,7 @@ PopulationManager::~PopulationManager() {
 
 void PopulationManager::initStatsFile() {
     const std::string statsPath = "training_stats.csv";
-    const std::string expectedHeader = "generation,best_fitness,avg_fitness,median_fitness,species_count,rolling_best_10,rolling_avg_10";
+    const std::string expectedHeader = "generation,best_fitness,avg_fitness,median_fitness,stddev_fitness,species_count,rolling_best_10,rolling_avg_10";
     bool recreateFile = false;
     std::ifstream inFile(statsPath);
 
@@ -81,6 +83,7 @@ void PopulationManager::updateFitnessStats() {
         bestFitness_ = 0.0f;
         avgFitness_ = 0.0f;
         medianFitness_ = 0.0f;
+        stdDevFitness_ = 0.0f;
         return;
     }
 
@@ -106,6 +109,14 @@ void PopulationManager::updateFitnessStats() {
 
     bestFitness_ = best;
     avgFitness_ = sum / static_cast<float>(spiders_.size());
+
+    float variance = 0.0f;
+    for (float value : fitnessValues) {
+        float diff = value - avgFitness_;
+        variance += diff * diff;
+    }
+    variance /= static_cast<float>(fitnessValues.size());
+    stdDevFitness_ = std::sqrt(variance);
 }
 
 void PopulationManager::updateRollingMeans() {
@@ -138,7 +149,7 @@ void PopulationManager::writeGenerationStatsCsv() {
     }
 
     updateRollingMeans();
-    statsFile_ << generation_ << "," << bestFitness_ << "," << avgFitness_ << "," << medianFitness_ << "," << speciesCount_ << "," << rollingBestFitness_ << "," << rollingAvgFitness_ << "\n";
+    statsFile_ << generation_ << "," << bestFitness_ << "," << avgFitness_ << "," << medianFitness_ << "," << stdDevFitness_ << "," << speciesCount_ << "," << rollingBestFitness_ << "," << rollingAvgFitness_ << "\n";
     statsFile_.flush();
 }
 

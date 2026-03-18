@@ -31,9 +31,10 @@ The project uses find_package(... CONFIG ...), so raylib and box2d must be avail
 
 From the project root:
 
-    cmake -S . -B build
-    cmake --build build -j
-    ./build/SpiderML
+    mkdir build && cd build
+    cmake ..
+    cmake --build .
+    ./SpiderML
 
 ## Where Statistics Are Stored
 

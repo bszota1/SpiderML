@@ -80,7 +80,7 @@ Most frequently tuned:
 
 ## Current Simulation Setup
 
-- Population size set in main.cpp: 200
+- Population size set in main.cpp: 300
 - All spiders start from the same position (spawn spacing = 0)
 - Generation duration: 20 s
 

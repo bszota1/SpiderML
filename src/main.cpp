@@ -24,7 +24,7 @@ int main() {
     groundShapeDef.material.friction = 0.8f;
     b2CreatePolygonShape(groundId, &groundShapeDef, &groundBox);
 
-    PopulationManager popManager(200, world);
+    PopulationManager popManager(300, world);
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();

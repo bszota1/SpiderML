@@ -7,9 +7,17 @@ SpiderML is a spider locomotion evolution simulation project built with:
 
 Each individual (spider) has its own genome and neural network that controls joint motors. Across generations, the population is evaluated by fitness, grouped into species, crossed over, and mutated.
 
-## Training Plot
+## Results & Visualization
 
-![Training analysis](data_analyse/analyse2.png)
+### Training Plots
+
+The project generates detailed analysis plots during training. Check the `data_analyse/` folder for visualizations:
+
+![Plot 1](data_analyse/plots1.png)
+
+![Plot 2](data_analyse/plots2.png)
+
+![Plot 3](data_analyse/plots3.png)
 
 ## What This Project Does
 

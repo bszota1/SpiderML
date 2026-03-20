@@ -93,7 +93,7 @@ Most frequently tuned:
 
 ## Performance Notes
 
-Written purely in C++17, SpiderML is highly optimized. A standard simulation of 200 spiders using Box2D and NEAT runs efficiently on a single thread, utilizing minimal CPU resources (e.g., ~10-15% on modern architectures like Apple Silicon) while maintaining stable physics calculations and high frame rates.
+Written purely in C++17, SpiderML is highly optimized. A standard simulation of 300 spiders using Box2D and NEAT runs efficiently on a single thread, utilizing minimal CPU resources (e.g., ~10-15% on modern architectures like Apple Silicon) while maintaining stable physics calculations and high frame rates.
 
 ## Directory Structure
 

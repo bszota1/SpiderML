@@ -7,6 +7,10 @@ constexpr float kSpawnBaseX = 200.0f;
 constexpr float kSpawnSpacingX = 0.0f;
 constexpr float kSpawnY = 400.0f;
 
+constexpr int kSpidersPerWorld = 4;
+constexpr float kPhysicsGravityY = 98.1f;
+constexpr int kPhysicsSubSteps = 4;
+
 constexpr float kCompatibilityC1 = 1.0f;
 constexpr float kCompatibilityC2 = 1.0f;
 constexpr float kCompatibilityC3 = 0.9f;

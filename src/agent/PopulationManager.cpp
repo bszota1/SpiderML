@@ -6,11 +6,11 @@
 #include <fstream>
 #include <string>
 
-PopulationManager::PopulationManager(int populSize, b2WorldId worldID) : 
-    worldID_{worldID},
+PopulationManager::PopulationManager(int populSize) : 
     populationSize_{populSize},
     generation_{1},
     timer_{0.0f},
+    simTime_{0.0f},
     generationTime_{NeatConfig::kGenerationTimeSeconds},
     population_{populSize}{
         rng_ = std::mt19937(std::random_device{}());
@@ -22,6 +22,7 @@ PopulationManager::PopulationManager(int populSize, b2WorldId worldID) :
         rollingBestFitness_ = 0.0f;
         rollingAvgFitness_ = 0.0f;
         initStatsFile();
+        createWorlds();
         createInitialPopulation();
         population_.speciate();
         speciesCount_ = population_.getSpeciesCount();
@@ -32,6 +33,45 @@ PopulationManager::~PopulationManager() {
     if (statsFile_.is_open()) {
         statsFile_.flush();
         statsFile_.close();
+    }
+    spiders_.clear();
+    for (b2WorldId world : worlds_) {
+        b2DestroyWorld(world);
+    }
+}
+
+void PopulationManager::createWorlds() {
+    const int worldCount = (populationSize_ + NeatConfig::kSpidersPerWorld - 1) / NeatConfig::kSpidersPerWorld;
+    worlds_.reserve(worldCount);
+
+    for (int i = 0; i < worldCount; i++) {
+        b2WorldDef worldDef = b2DefaultWorldDef();
+        worldDef.gravity = {0.0f, NeatConfig::kPhysicsGravityY};
+        b2WorldId world = b2CreateWorld(&worldDef);
+
+        b2BodyDef groundBodyDef = b2DefaultBodyDef();
+        groundBodyDef.position = {1000.0f, 550.0f};
+        b2BodyId groundId = b2CreateBody(world, &groundBodyDef);
+
+        b2Polygon groundBox = b2MakeBox(2000.0f, 20.0f);
+        b2ShapeDef groundShapeDef = b2DefaultShapeDef();
+        groundShapeDef.material.friction = 0.8f;
+        b2CreatePolygonShape(groundId, &groundShapeDef, &groundBox);
+
+        worlds_.push_back(world);
+    }
+}
+
+void PopulationManager::spawnSpiders(const std::vector<Genome>& genomes) {
+    spiders_.clear();
+    spiders_.reserve(populationSize_);
+
+    for (int i = 0; i < populationSize_ && i < static_cast<int>(genomes.size()); i++) {
+        Vector2 startPosition = {
+            NeatConfig::kSpawnBaseX + (i * NeatConfig::kSpawnSpacingX),
+            NeatConfig::kSpawnY
+        };
+        spiders_.emplace_back(genomes[i], startPosition, worlds_[i / NeatConfig::kSpidersPerWorld]);
     }
 }
 
@@ -154,16 +194,7 @@ void PopulationManager::writeGenerationStatsCsv() {
 }
 
 void PopulationManager::createInitialPopulation() {
-    const auto& genomes = population_.getPopulation();
-
-    spiders_.reserve(populationSize_);
-    for (int i = 0; i < populationSize_ && i < static_cast<int>(genomes.size()); i++) {
-        Vector2 startPosition = {
-            NeatConfig::kSpawnBaseX + (i * NeatConfig::kSpawnSpacingX),
-            NeatConfig::kSpawnY
-        };
-        spiders_.emplace_back(genomes[i], startPosition, worldID_);
-    }
+    spawnSpiders(population_.getPopulation());
 }
 
 void PopulationManager::nextGeneration() {
@@ -179,25 +210,20 @@ void PopulationManager::nextGeneration() {
     writeGenerationStatsCsv();
     population_.nextGeneration();
 
-    const auto& nextGenomes = population_.getPopulation();
-    spiders_.clear();
-    spiders_.reserve(populationSize_);
-
-    for (int i = 0; i < populationSize_ && i < static_cast<int>(nextGenomes.size()); i++) {
-        Vector2 startPosition = {
-            NeatConfig::kSpawnBaseX + (i * NeatConfig::kSpawnSpacingX),
-            NeatConfig::kSpawnY
-        };
-        spiders_.emplace_back(nextGenomes[i], startPosition, worldID_);
-    }
+    spawnSpiders(population_.getPopulation());
 
     updateFitnessStats();
 }
 
 void PopulationManager::update(float deltaTime){
+    for (b2WorldId world : worlds_) {
+        b2World_Step(world, deltaTime, NeatConfig::kPhysicsSubSteps);
+    }
+
     timer_ += deltaTime;
+    simTime_ += deltaTime;
     for (auto& spider : spiders_){
-        spider.update();
+        spider.update(simTime_);
     }
     updateFitnessStats();
 

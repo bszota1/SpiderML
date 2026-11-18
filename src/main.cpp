@@ -1,36 +1,23 @@
+#include <chrono>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <raylib.h>
-#include <box2d/box2d.h>
 
-#include "Spider.hpp"
-#include "Genome.hpp"
 #include "PopulationManager.hpp"
 
-int main() {
+namespace {
+constexpr int kPopulationSize = 300;
+constexpr float kFixedTimeStep = 1.0f / 60.0f;
+
+void runWindowed() {
     InitWindow(1200, 800, "Spider Evolution NEAT");
     SetTargetFPS(60);
 
-    b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = {0.0f, 98.1f};
-    b2WorldId world = b2CreateWorld(&worldDef);
-
-    b2BodyDef groundBodyDef = b2DefaultBodyDef();
-    groundBodyDef.position = { 1000.0f, 550.0f }; 
-    b2BodyId groundId = b2CreateBody(world, &groundBodyDef);
-
-    b2Polygon groundBox = b2MakeBox(2000.0f, 20.0f); 
-    
-    b2ShapeDef groundShapeDef = b2DefaultShapeDef();
-    groundShapeDef.material.friction = 0.8f;
-    b2CreatePolygonShape(groundId, &groundShapeDef, &groundBox);
-
-    PopulationManager popManager(300, world);
+    PopulationManager popManager(kPopulationSize);
 
     while (!WindowShouldClose()) {
-        float dt = GetFrameTime();
-
-        b2World_Step(world, dt, 4);
-        popManager.update(dt);
+        popManager.update(GetFrameTime());
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -52,7 +39,53 @@ int main() {
         EndDrawing();
     }
 
-    b2DestroyWorld(world);
     CloseWindow();
+}
+
+void runHeadless(int maxGenerations) {
+    PopulationManager popManager(kPopulationSize);
+
+    using Clock = std::chrono::steady_clock;
+    const auto start = Clock::now();
+    int lastGeneration = popManager.getGeneration();
+
+    while (maxGenerations <= 0 || popManager.getGeneration() - 1 < maxGenerations) {
+        popManager.update(kFixedTimeStep);
+
+        if (popManager.getGeneration() != lastGeneration) {
+            lastGeneration = popManager.getGeneration();
+            const double elapsed = std::chrono::duration<double>(Clock::now() - start).count();
+            const int completed = lastGeneration - 1;
+            std::cout << "Generation " << completed
+                      << " | species: " << popManager.getSpeciesCount()
+                      << " | rolling best (10): " << popManager.getRollingBestFitness()
+                      << " | " << (completed / elapsed * 60.0) << " gen/min" << std::endl;
+        }
+    }
+
+    const double elapsed = std::chrono::duration<double>(Clock::now() - start).count();
+    const int completed = popManager.getGeneration() - 1;
+    std::cout << "Completed " << completed << " generations in " << elapsed << " s ("
+              << (completed / elapsed * 60.0) << " gen/min)\n";
+}
+}
+
+int main(int argc, char** argv) {
+    bool headless = false;
+    int maxGenerations = 0;
+    for (int i = 1; i < argc; i++) {
+        if (std::strcmp(argv[i], "--headless") == 0) {
+            headless = true;
+        } else if (std::strcmp(argv[i], "--generations") == 0 && i + 1 < argc) {
+            maxGenerations = std::atoi(argv[++i]);
+        }
+    }
+
+    if (headless) {
+        runHeadless(maxGenerations);
+    } else {
+        runWindowed();
+    }
+
     return 0;
 }

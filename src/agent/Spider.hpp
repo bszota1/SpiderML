@@ -22,7 +22,7 @@ private:
 public:
     Spider(const Genome& genome, const Vector2& position, b2WorldId worldId);
     ~Spider();
-    void update();
+    void update(float simTime);
     void draw() const;
 
     Genome getGenome() const { return genome_; }

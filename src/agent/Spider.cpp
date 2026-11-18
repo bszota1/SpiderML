@@ -116,7 +116,7 @@ void Spider::draw() const {
     }
 }
 
-void Spider::update() {
+void Spider::update(float simTime) {
     if (!isAlive_) return;
 
     std::vector<float> inputs;
@@ -133,9 +133,8 @@ void Spider::update() {
         inputs.push_back(b2RevoluteJoint_GetAngle(joint));
     }
 
-    double time = GetTime();
-    double stime = sinf(time * 5.0f);
-    double ctime = cosf(time * 5.0f);
+    float stime = sinf(simTime * 5.0f);
+    float ctime = cosf(simTime * 5.0f);
 
     inputs.push_back(stime);
     inputs.push_back(ctime);

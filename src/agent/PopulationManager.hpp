@@ -13,11 +13,12 @@
 
 class PopulationManager{
 private:
+    std::vector<b2WorldId> worlds_;
     std::vector<Spider> spiders_;
-    b2WorldId worldID_;
     int populationSize_;
     int generation_;
     float timer_;
+    float simTime_;
     float generationTime_;
     std::mt19937 rng_;
     InnovationManager innoManager_;
@@ -37,10 +38,12 @@ private:
     void updateRollingMeans();
     void initStatsFile();
     void writeGenerationStatsCsv();
+    void createWorlds();
+    void spawnSpiders(const std::vector<Genome>& genomes);
 
     void nextGeneration();
 public:
-    PopulationManager(int populSize, b2WorldId worldID);
+    PopulationManager(int populSize);
     ~PopulationManager();
     void update(float deltaTime);
     void draw() const;
